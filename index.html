@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+  <head>
+    <title>maps</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+	height:100%; 
+}
+html {
+    height:100%;
+}
+      </style>
+  <body>
+    <canvas id='c' height="100" width="100">
+    <script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="js/three.js"></script>
+<script src="js/controls/TrackballControls.js"></script>
+<script>
+  $(function () {
+    var socket = io();
+    $('form').submit(function(){
+      socket.emit('position', $('#m').val());
+      $('#m').val('');
+      return false;
+    });
+
+
+var url = new URL(window.location);
+console.log(url);
+var myKittenId = parseInt(url.searchParams.get("kittenId"));
+
+if(!myKittenId)
+{
+    myKittenId = 1;
+}
+
+
+    var c = document.getElementById("c");
+    var ctx = c.getContext('2d');
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+socket.on('state', function(msg){
+  console.log('received:', msg);
+  state = msg;
+  ctx.clearRect(0, 0, c.width, c.height);
+  for(const kittenId in state){
+    kitten = state[kittenId];
+    console.log('kitten',kitten)
+    draw_kitten(kitten.x, kitten.y, kitten.kittenId); 
+  } 
+});
+
+
+
+function draw_kitten(x, y, kittenId)
+{
+  console.log('draw_kitten', x, y, kittenId);
+  var base_image = new Image();
+  base_image.src = 'kittens/kitten' + kittenId + '.jpg';
+  base_image.onload = function(){
+    ctx.drawImage(base_image, x, y, 128, 128);
+  }
+}
+
+    $('#c').mousemove(function(e) {
+        console.log(e);
+      	console.log(e.pageX, e.pageY)
+	 	socket.emit('position', {'kittenId':myKittenId, 'x':e.pageX-64, 'y':e.pageY-64})
+        draw_kitten(e.pageX-64, e.pageY-64, myKittenId);
+	});
+
+});
+
+</script>
+  </body>
+</html>
